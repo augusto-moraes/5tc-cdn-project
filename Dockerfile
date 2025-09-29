@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y \
     net-tools \
     sudo \
     curl \
+    vim \
+    python3 \
+    python3-pip \
  && apt-get clean
 
 # Expose HTTP port (optional)
