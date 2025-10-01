@@ -2,8 +2,8 @@ import socket
 import os
 import mimetypes
 
-HOST = "200.200.200.1"
-PORT = 80
+HOST = "127.0.0.1" # to change
+PORT = 3000 # to change
 BASE_DIR = "files"
 
 # Map HTTP status codes to local goat images
@@ -36,35 +36,26 @@ def handle_client(conn):
             mime_type, _ = mimetypes.guess_type(filepath)
             if not mime_type:
                 mime_type = "application/octet-stream"
+
+            # Forces download of the file so that the surrogates can cache it
             header = (
                 "HTTP/1.1 200 OK\r\n"
                 f"Content-Length: {len(body)}\r\n"
-                f"Content-Type: {mime_type}\r\n\r\n"
+                f"Content-Type: {mime_type}\r\n"
+                f"Content-Disposition: attachment; filename=\"{os.path.basename(filepath)}\"\r\n\r\n"
             )
+
             response = header.encode("utf-8") + body
 
         else:
-            # Serve 404 page with local goat image
-            goat_image = ERROR_GOATS.get(404, None)
-            if goat_image and os.path.isfile(os.path.join(BASE_DIR, goat_image)):
-                body = f"""
-                <html>
-                <head><title>404 Not Found</title></head>
-                <body>
-                    <h1>Oops! Page not found</h1>
-                    <img src="/{goat_image}" alt="404 Goat" style="max-width:600px;">
-                </body>
-                </html>
-                """.encode("utf-8")
-            else:
-                body = b"<h1>404 Not Found</h1>"
-
+            # Return an HTTP 404 code when the central server doesn't have the file.
             header = (
                 "HTTP/1.1 404 Not Found\r\n"
-                f"Content-Length: {len(body)}\r\n"
-                "Content-Type: text/html\r\n\r\n"
+                "Content-Length: 0\r\n"
+                "Content-Type: text/plain\r\n\r\n"
             )
-            response = header.encode("utf-8") + body
+            response = header.encode("utf-8")
+
 
         conn.sendall(response)
 

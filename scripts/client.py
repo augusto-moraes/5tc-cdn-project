@@ -1,7 +1,7 @@
 import socket
 
 HOST = "127.0.0.1"
-PORT = 8080
+PORT = 3030
 
 def http_get(filename):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -14,5 +14,5 @@ def http_get(filename):
         print(response)
 
 if __name__ == "__main__":
-    http_get("test.txt")   # essaie avec un fichier qui existe
+    http_get("200.jpg")   # essaie avec un fichier qui existe
     http_get("notfound.txt")  # essaie avec un fichier qui n’existe pas
