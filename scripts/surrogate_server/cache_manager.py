@@ -1,15 +1,26 @@
 import os
 import mimetypes
+import random
 
 CACHE_DIR = "cache"
-cache_size = 10
-cache_dir_list = []
+CACHE_SIZE = 4
 
 # Ensure the cache directory exists
 if not os.path.exists(CACHE_DIR):
     os.makedirs(CACHE_DIR)
 
 def add(filename, header_str, body):
+    # Check if the cache is full
+    if len(os.listdir(CACHE_DIR)) >= CACHE_SIZE:
+        # Find the least recently used (LRU) file
+        files = os.listdir(CACHE_DIR)
+        lru_file = min(files, key=lambda f: os.path.getatime(os.path.join(CACHE_DIR, f)))
+        lru_file_path = os.path.join(CACHE_DIR, lru_file)
+        
+        # Delete the LRU file
+        os.remove(lru_file_path)
+        print(f"Cache full. Deleted least recently used file: {lru_file}")
+    
     # Determine the name of the file that was sent back by the central server
     filename_out = filename
     for line in header_str.split("\r\n"):
