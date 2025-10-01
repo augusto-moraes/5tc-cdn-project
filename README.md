@@ -8,5 +8,11 @@ The web architecture designed for this phase can be found bellow :
 
 <img width="1359" height="489" alt="Phase0" src="snapshots/Phase0.png" />
 
-## Phase 1
-Working on it...
+## Phase 1 : Minnie
+When request the file stored locally  
+
+<img width="1359" height="489" alt="Phase0" src="snapshots/phase1_1.png" />
+
+In case, the file is not there locally return a funny image 
+
+<img width="1359" height="489" alt="Phase0" src="snapshots/phase1_2.png" />
