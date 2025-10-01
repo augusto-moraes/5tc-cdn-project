@@ -1,6 +1,5 @@
 import os
 import mimetypes
-import random
 
 CACHE_DIR = "cache"
 CACHE_SIZE = 4
