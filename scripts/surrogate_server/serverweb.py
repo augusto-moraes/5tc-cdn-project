@@ -1,11 +1,10 @@
 import socket
 import os
 import mimetypes
-import requests
 
 HOST = "127.0.0.1"
 PORT = 3030
-BASE_DIR = "files"
+BASE_DIR = "cache"
 
 CENTRAL_HOST = "127.0.0.1" # to change
 CENTRAL_PORT = 3000 # to change

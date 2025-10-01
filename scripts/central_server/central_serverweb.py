@@ -4,7 +4,7 @@ import mimetypes
 
 HOST = "127.0.0.1" # to change
 PORT = 3000 # to change
-BASE_DIR = "files"
+BASE_DIR = "cache"
 
 # Map HTTP status codes to local goat images
 ERROR_GOATS = {
