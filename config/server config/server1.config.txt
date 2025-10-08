@@ -3,8 +3,8 @@ iface eth0 inet static
 	address 192.168.1.100
 	netmask 255.255.255.0
 	gateway 192.168.1.1
-
-auto lo
-iface lo inet static
-    address 200.200.200.1
-    netmask 255.255.255.255
+auto eth1
+iface eth1 inet static
+	address 192.168.10.100
+	netmask 255.255.255.0
+	gateway 192.168.10.1
