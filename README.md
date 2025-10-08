@@ -2,7 +2,9 @@
 A Content Delivery Networks (CDN) project by Van Quang Thai, Sofia El Khalifi, Léna Voinchet et Augusto Moraes.
 
 ## Phase 0 : Mickey
-For this phase, we've designed a server that answers to GET requests for files stored locally ; and that answers `Error 404` otherwise.
+For this phase we designed a web server that
+- answers to GET requests for files stored locally ✅
+- answers `Error 404` otherwise ✅
 
 The web architecture designed for this phase can be found bellow :
 
