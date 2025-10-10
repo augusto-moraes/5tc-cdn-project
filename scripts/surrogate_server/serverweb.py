@@ -9,6 +9,8 @@ PORT = 3030
 CENTRAL_HOST = "192.168.4.100" # to change
 CENTRAL_PORT = 3000 # to change
 
+HOST_TO_CENTRAL = "127.0.0.1" # surrogate server address used to connect to the central server to change
+
 # Map HTTP status codes to local goat images
 ERROR_GOATS = {
     400: "400.jpg",
@@ -45,6 +47,7 @@ def handle_client(conn):
 
 def http_get(filename):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((HOST_TO_CENTRAL, 0))
         s.connect((CENTRAL_HOST, CENTRAL_PORT))
         request = f"GET /{filename} HTTP/1.1\r\nHost: {CENTRAL_HOST}\r\n\r\n"
         s.sendall(request.encode("utf-8"))
