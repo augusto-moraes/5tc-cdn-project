@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy server code and initial files
-COPY server.py /app/
+COPY central_serverweb.py /app/
 COPY cache /app/cache
 
 # Expose HTTP port (server will bind to this when you run it)
