@@ -2,7 +2,7 @@ import socket
 import os
 import mimetypes
 
-HOST = "127.0.0.1" # to change
+HOST = "192.168.4.100" # to change
 PORT = 3000 # to change
 BASE_DIR = "cache"
 
