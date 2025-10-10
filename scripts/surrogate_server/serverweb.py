@@ -3,10 +3,10 @@ import socket
 # local imports
 import cache_manager
 
-HOST = "127.0.0.1"
+HOST = "192.168.1.100"
 PORT = 3030
 
-CENTRAL_HOST = "127.0.0.1" # to change
+CENTRAL_HOST = "192.168.4.100" # to change
 CENTRAL_PORT = 3000 # to change
 
 # Map HTTP status codes to local goat images
