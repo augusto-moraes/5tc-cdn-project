@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy server code and initial files
-COPY server.py /app/
+COPY serverweb.py /app/
 COPY cache_manager.py /app/
 COPY cache /app/cache
 
