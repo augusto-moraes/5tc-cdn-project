@@ -1,0 +1,9 @@
+echo "100 anycast" | sudo tee -a /etc/iproute2/rt_tables
+
+grep anycast /etc/iproute2/rt_tables
+
+ip route add 192.168.1.1 dev eth1 table anycast
+ip route show table anycast
+
+output 192.168.1.1 dev eth1 scope link
+
