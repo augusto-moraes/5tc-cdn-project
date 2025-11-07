@@ -67,6 +67,8 @@ def http_get(filename):
     header_str = header.decode("utf-8", errors="ignore")
     print("En-têtes reçus:\n", header_str)
 
+
+
     # /!\ Remove headers that force download and ensure correct Content-Type/Length
     header_lines = header_str.split("\r\n")
     filtered = []
@@ -124,7 +126,7 @@ def http_get(filename):
 
     else:
         cache_manager.add(filename, header_str, body)
-        return response
+        return cache_manager.get(filename)
 
 def run_server():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
