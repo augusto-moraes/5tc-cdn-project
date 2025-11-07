@@ -2,6 +2,7 @@ import socket
 
 # local imports
 import cache_manager
+import mimetypes
 
 HOST = "192.168.1.100"
 PORT = 3030
@@ -9,7 +10,12 @@ PORT = 3030
 CENTRAL_HOST = "192.168.4.100" # to change
 CENTRAL_PORT = 3000 # to change
 
-HOST_TO_CENTRAL = "127.0.0.1" # surrogate server address used to connect to the central server to change
+HOST_TO_CENTRAL = "192.168.X.100" # surrogate server address used to connect to the central server to change
+
+# # for local testing
+# HOST = "127.0.0.1"
+# CENTRAL_HOST = "127.0.0.1"
+# HOST_TO_CENTRAL = "127.0.0.1"
 
 # Map HTTP status codes to local goat images
 ERROR_GOATS = {
@@ -32,14 +38,10 @@ def handle_client(conn):
         if file == "":
             file = "index.html"
 
-        if cache_manager.is_in_cache(file):
-            response = cache_manager.get(file)
-
-        # If the file is not cached in this server
-        else:
-            # Fetch content from the central server and apply cache strategy
+        if not cache_manager.is_in_cache(file):
             response = http_get(file)
-
+        else:
+            response = cache_manager.get(file)
         conn.sendall(response)
 
     finally:
@@ -64,6 +66,36 @@ def http_get(filename):
     header, body = response.split(b"\r\n\r\n", 1)
     header_str = header.decode("utf-8", errors="ignore")
     print("En-têtes reçus:\n", header_str)
+
+    # /!\ Remove headers that force download and ensure correct Content-Type/Length
+    header_lines = header_str.split("\r\n")
+    filtered = []
+    existing_content_type = None
+
+    for line in header_lines:
+        low = line.lower()
+        if low.startswith("content-disposition:"):
+            # strip any forced download disposition
+            continue
+        if low.startswith("content-length:"):
+            # we'll recalc length below
+            continue
+        if low.startswith("content-type:"):
+            existing_content_type = line.split(":", 1)[1].strip()
+            continue
+        filtered.append(line)
+
+    # Choose a sensible Content-Type based on filename if possible
+    mime_type, _ = mimetypes.guess_type(filename)
+    if not mime_type:
+        mime_type = existing_content_type or "application/octet-stream"
+
+    filtered.append(f"Content-Type: {mime_type}")
+    filtered.append(f"Content-Length: {len(body)}")
+
+    header_str = "\r\n".join(filtered)
+
+    print("En-têtes filtré:\n", header_str)
 
     # If the central server responds with a 404 error
     if "404 Not Found" in header_str:
