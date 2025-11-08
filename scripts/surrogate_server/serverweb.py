@@ -1,4 +1,5 @@
 import socket
+import os
 
 # local imports
 import cache_manager
@@ -24,6 +25,47 @@ ERROR_GOATS = {
     500: "500.jpg",
     200: "200.jpg"
 }
+
+# --- 404 Template Handling ---
+# Define the path to the 404 HTML template file
+_404_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'templates', '404.html')
+_404_PAGE_TEMPLATE = None # Will store the loaded template string
+_SIMPLE_404_FALLBACK = b"<h1>404 Not Found</h1>" # A basic fallback HTML as bytes
+
+# Attempt to load the 404 template file once at startup
+try:
+    with open(_404_TEMPLATE_PATH, 'r', encoding='utf-8') as f:
+        _404_PAGE_TEMPLATE = f.read()
+except FileNotFoundError:
+    print(f"WARNING: 404 template file not found at {_404_TEMPLATE_PATH}. Using simple fallback for 404 errors.")
+except Exception as e:
+    print(f"WARNING: Error reading 404 template file {_404_TEMPLATE_PATH}: {e}. Using simple fallback for 404 errors.")
+# --- End 404 Template Handling ---
+
+def _build_404_response():
+    """Builds and returns a complete HTTP 404 response."""
+    goat_image = ERROR_GOATS.get(404)
+    body = _SIMPLE_404_FALLBACK  # Default to the simple fallback
+
+    # Attempt to use the template if it was loaded and the goat image is cached
+    if _404_PAGE_TEMPLATE and goat_image and cache_manager.is_in_cache(goat_image):
+        try:
+            # Format the template with the goat image path and encode to bytes
+            formatted_body = _404_PAGE_TEMPLATE.format(goat_image=goat_image)
+            body = formatted_body.encode("utf-8")
+        except KeyError:
+            # This happens if the template is missing the {goat_image} placeholder
+            print(f"WARNING: 404 template at {_404_TEMPLATE_PATH} is malformed (missing '{{goat_image}}' placeholder). Using simple fallback.")
+        except Exception as e:
+            # Catch any other unexpected rendering errors
+            print(f"WARNING: An unexpected error occurred while rendering 404 template: {e}. Using simple fallback.")
+
+    header = (
+        "HTTP/1.1 404 Not Found\r\n"
+        f"Content-Length: {len(body)}\r\n"
+        "Content-Type: text/html\r\n\r\n"
+    )
+    return header.encode("utf-8") + body
 
 def handle_client(conn):
     try:
@@ -63,11 +105,14 @@ def http_get(filename):
             response += chunk
 
     # Separate header and body
-    header, body = response.split(b"\r\n\r\n", 1)
+    try:
+        header, body = response.split(b"\r\n\r\n", 1)
+    except ValueError:
+        # Handle cases where the response is malformed (e.g., no body)
+        header, body = response, b""
+
     header_str = header.decode("utf-8", errors="ignore")
     print("En-têtes reçus:\n", header_str)
-
-
 
     # /!\ Remove headers that force download and ensure correct Content-Type/Length
     header_lines = header_str.split("\r\n")
@@ -101,28 +146,7 @@ def http_get(filename):
 
     # If the central server responds with a 404 error
     if "404 Not Found" in header_str:
-        # Serve 404 page with local goat image
-        goat_image = ERROR_GOATS.get(404, None)
-        if goat_image and cache_manager.is_in_cache(goat_image):
-            body = f"""
-            <html>
-            <head><title>404 Not Found</title></head>
-            <body>
-                <h1>Oops! Page not found</h1>
-                <img src="/{goat_image}" alt="404 Goat" style="max-width:600px;">
-            </body>
-            </html>
-            """.encode("utf-8")
-        else:
-            body = b"<h1>404 Not Found</h1>"
-
-        header = (
-            "HTTP/1.1 404 Not Found\r\n"
-            f"Content-Length: {len(body)}\r\n"
-            "Content-Type: text/html\r\n\r\n"
-        )
-        response = header.encode("utf-8") + body
-        return response
+        return _build_404_response()
 
     else:
         cache_manager.add(filename, header_str, body)
