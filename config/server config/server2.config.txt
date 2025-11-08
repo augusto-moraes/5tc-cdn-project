@@ -1,10 +1,23 @@
 auto eth0
 iface eth0 inet static
-	address 192.168.6.100
-	netmask 255.255.255.0
-	gateway 192.168.6.1
+  address 192.168.6.100
+  netmask 255.255.255.0
+  gateway 192.168.6.1
+
 auto eth1
 iface eth1 inet static
-	address 192.168.1.100
-	netmask 255.255.255.255
-	gateway 192.168.1.1
+    address 192.168.1.100
+    netmask 255.255.255.0
+
+    # --- anycast + policy routing setup ---
+    up ip route add 192.168.1.0/24 dev eth1 scope link table 100
+    up ip route add 192.168.1.1 dev eth1 scope link table 100
+    up ip route add default via 192.168.1.1 dev eth1 table 100
+    up ip rule add from 192.168.1.100/32 lookup 100
+
+    # --- global default still via eth0 ---
+    up ip route replace default via 192.168.6.1 dev eth0
+
+    # --- kernel tuning ---
+    up sysctl -w net.ipv4.conf.eth1.proxy_arp=1
+    up sysctl -w net.ipv4.conf.all.rp_filter=2
