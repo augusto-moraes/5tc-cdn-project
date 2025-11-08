@@ -38,6 +38,8 @@ def handle_client(conn):
         if file == "":
             file = "index.html"
 
+        cache_manager.checkTTL()
+
         if not cache_manager.is_in_cache(file):
             response = http_get(file)
         else:
