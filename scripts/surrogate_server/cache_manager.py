@@ -40,6 +40,17 @@ def is_in_cache(file_name):
     return os.path.isfile(os.path.join(CACHE_DIR, file_name))
 
 def get(file_name):
+    # Check if the file is in the cache
+    if not is_in_cache(file_name):
+        header = (
+            "HTTP/1.1 404 Not Found\r\n"
+            "Content-Type: text/html\r\n"
+            "Content-Length: 100\r\n\r\n"
+            "<html><body><h1>404 Not Found</h1><p>Something went wrong. The requested file is not in the cache.</p></body></html>"
+        )
+        response = header.encode("utf-8")
+        return response
+    
     # get existing file
     filepath = os.path.join(CACHE_DIR, file_name)
     with open(filepath, "rb") as f:

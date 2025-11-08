@@ -4,6 +4,8 @@ import socket
 import cache_manager
 import mimetypes
 
+import time
+
 HOST = "192.168.1.100"
 PORT = 3030
 
@@ -27,13 +29,22 @@ ERROR_GOATS = {
 
 def handle_client(conn):
     try:
-        request = conn.recv(1024).decode("utf-8", errors="ignore")
+        print(f"######### [INFO] Time : {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} #########")
+        conn.settimeout(3)  # Set a timeout of 3 seconds
+
+        try:
+            request = conn.recv(1024).decode("utf-8", errors="ignore")
+        except socket.timeout:
+            print("[Error] Request timed out.")
+            return
+        
         print("Request:\n", request)
 
         try:
             file = request.split(" ")[1].lstrip("/")
-        except IndexError:
-            file = ""
+        except Exception as e:
+            print(f"[Error] Exception: {e}, aborting.")
+            return
 
         if file == "":
             file = "index.html"
@@ -44,6 +55,7 @@ def handle_client(conn):
             response = http_get(file)
         else:
             response = cache_manager.get(file)
+
         conn.sendall(response)
 
     finally:
@@ -68,8 +80,6 @@ def http_get(filename):
     header, body = response.split(b"\r\n\r\n", 1)
     header_str = header.decode("utf-8", errors="ignore")
     print("En-têtes reçus:\n", header_str)
-
-
 
     # /!\ Remove headers that force download and ensure correct Content-Type/Length
     header_lines = header_str.split("\r\n")
@@ -138,7 +148,7 @@ def run_server():
         print(f"Server running at http://{HOST}:{PORT}")
         while True:
             conn, addr = s.accept()
-            print("Connected:", addr)
+            print(f"\n######### Connected:", addr, "#########")
             handle_client(conn)
 
 if __name__ == "__main__":
