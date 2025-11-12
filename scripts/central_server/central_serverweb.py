@@ -50,6 +50,8 @@ def handle_client(conn):
 
             response = header.encode("utf-8") + body
 
+            print(f"[INFO] Requested file {filepath} served.")
+
         else:
             # Return an HTTP 404 code when the central server doesn't have the file.
             header = (
@@ -57,8 +59,22 @@ def handle_client(conn):
                 "Content-Length: 0\r\n"
                 "Content-Type: text/plain\r\n\r\n"
             )
-            response = header.encode("utf-8")
 
+            goat_image = ERROR_GOATS.get(404, None)
+
+            body = f"""
+            <html>
+            <head><title>404 Not Found</title></head>
+            <body>
+                <h1>Oops! Page not found</h1>
+                <img src="/{goat_image}" alt="404 Goat" style="max-width:600px;">
+            </body>
+            </html>
+            """.encode("utf-8")
+
+            response = header.encode("utf-8") + body
+
+            print(f"[INFO] Requested file {filepath} not found. 404 error sent.")
 
         conn.sendall(response)
 
