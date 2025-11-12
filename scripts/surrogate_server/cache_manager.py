@@ -1,8 +1,11 @@
 import os
 import mimetypes
+import time
 
 CACHE_DIR = "cache"
 CACHE_SIZE = 4
+
+TTL = 300000  # Time to live (5 min) in milliseconds
 
 # Ensure the cache directory exists
 if not os.path.exists(CACHE_DIR):
@@ -14,10 +17,7 @@ def add(filename, header_str, body):
         # Find the least recently used (LRU) file
         files = os.listdir(CACHE_DIR)
         lru_file = min(files, key=lambda f: os.path.getatime(os.path.join(CACHE_DIR, f)))
-        lru_file_path = os.path.join(CACHE_DIR, lru_file)
-        
-        # Delete the LRU file
-        os.remove(lru_file_path)
+        remove(lru_file)
         print(f"Cache full. Deleted least recently used file: {lru_file}")
     
     # Determine the name of the file that was sent back by the central server
@@ -40,6 +40,17 @@ def is_in_cache(file_name):
     return os.path.isfile(os.path.join(CACHE_DIR, file_name))
 
 def get(file_name):
+    # Check if the file is in the cache
+    if not is_in_cache(file_name):
+        header = (
+            "HTTP/1.1 404 Not Found\r\n"
+            "Content-Type: text/html\r\n"
+            "Content-Length: 100\r\n\r\n"
+            "<html><body><h1>404 Not Found</h1><p>Something went wrong. The requested file is not in the cache.</p></body></html>"
+        )
+        response = header.encode("utf-8")
+        return response
+    
     # get existing file
     filepath = os.path.join(CACHE_DIR, file_name)
     with open(filepath, "rb") as f:
@@ -61,3 +72,23 @@ def clear():
         if os.path.isfile(file_path):
             os.remove(file_path)
     print("Cache cleared.")
+
+def remove(file_name, message=""):
+    file_path = os.path.join(CACHE_DIR, file_name)
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+        if message!="":
+            print(message)
+        else:
+            print(f"Removed {file_name} from cache.")
+    else:
+        print(f"{file_name} not found in cache.")
+
+def checkTTL():
+    current_time = int(time.time() * 1000)  # Current time in milliseconds
+    for file_name in os.listdir(CACHE_DIR):
+        file_path = os.path.join(CACHE_DIR, file_name)
+        if os.path.isfile(file_path):
+            last_access_time = int(os.path.getatime(file_path) * 1000)
+            if current_time - last_access_time > TTL:
+                remove(file_name, f"Removed {file_name} from cache due to TTL expiration.")

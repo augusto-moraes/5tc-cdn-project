@@ -1,2 +1,4 @@
-.DS_Store
-.backup
+*.DS_Store
+*.backup
+scripts/surrogate_server/cache/*.*
+__pycache__
