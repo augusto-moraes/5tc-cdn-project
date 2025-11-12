@@ -2,7 +2,8 @@ import socket
 import os
 import mimetypes
 
-HOST = "192.168.4.100" # to change
+# CENTRAL SERVER
+HOST = "192.168.4.100" 
 PORT = 3000 # to change
 BASE_DIR = "cache"
 
