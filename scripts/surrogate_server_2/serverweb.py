@@ -106,7 +106,12 @@ def handle_client(conn):
                     print(f"[INFO] File not found on peers, fetching from central server...")
                     response = http_get(file)
 
-        conn.sendall(response)
+        try:
+            conn.sendall(response)
+        except BrokenPipeError:
+            print(f"[Warning] Broken pipe: client {client_ip} disconnected.")
+        except Exception as e:
+            print(f"[Error] Failed to send response to {client_ip}: {e}")
 
     finally:
         conn.close()
