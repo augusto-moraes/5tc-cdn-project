@@ -106,6 +106,9 @@ def handle_client(conn):
                     print(f"[INFO] File not found on peers, fetching from central server...")
                     response = http_get(file)
 
+        # To fix our timeout error when sending a response
+        conn.settimeout(30)
+        
         try:
             conn.sendall(response)
         except BrokenPipeError:
