@@ -90,6 +90,7 @@ def run_server():
         print(f"Server running at http://{HOST}:{PORT}")
         while True:
             conn, addr = s.accept()
+            print("\n###########################")
             print("Connected:", addr)
             handle_client(conn)
 
