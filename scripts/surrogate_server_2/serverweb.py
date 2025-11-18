@@ -30,16 +30,6 @@ HOST = "127.0.0.1"
 CENTRAL_HOST = "127.0.0.1"
 HOST_TO_CENTRAL = "127.0.0.1" """
 
-# Map HTTP status codes to local goat images
-# TO REMOVE I THINK
-# Only used in that hard coded 404 bloc
-ERROR_GOATS = {
-    400: "400.jpg",
-    404: "404.jpg",
-    500: "500.jpg",
-    200: "200.jpg"
-}
-
 # Function to handle the communication with the client and the peers
 # 1) CLIENT REQUEST: anycast address
 # If in cache, send the file.
@@ -209,28 +199,15 @@ def http_get(filename):
 
     # If the central server responds with a 404 error
     if "404 Not Found" in header_str:
-        # Serve 404 page with local goat image
-        goat_image = ERROR_GOATS.get(404, None)
-        if goat_image and cache_manager.is_in_cache(goat_image):
-            body = f"""
-            <html>
-            <head><title>404 Not Found</title></head>
-            <body>
-                <h1>Oops! Page not found</h1>
-                <img src="/{goat_image}" alt="404 Goat" style="max-width:600px;">
-            </body>
-            </html>
-            """.encode("utf-8")
-        else:
-            body = b"<h1>404 Not Found</h1>"
-
-        header = (
+        print("[INFO] Central server returned 404, forwarding HTML error page to client.")
+        
+        # Force valid HTTP headers to send to browser
+        new_header = (
             "HTTP/1.1 404 Not Found\r\n"
-            f"Content-Length: {len(body)}\r\n"
-            "Content-Type: text/html\r\n\r\n"
+            "Content-Type: text/html\r\n"
+            f"Content-Length: {len(body)}\r\n\r\n"
         )
-        response = header.encode("utf-8") + body
-        return response
+        return new_header.encode("utf-8") + body
 
     else:
         cache_manager.add(filename, header_str, body)
