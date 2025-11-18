@@ -85,6 +85,7 @@ def handle_client(conn):
         # If the request comes from a client
         # In this case, the surrogate receives the request on its anycast address: 192.168.1.100
         else:
+
             # 1) Check if the file is in the cache
             if cache_manager.is_in_cache(file):
                 print(f"[INFO] Cache hit for {file}")
@@ -105,6 +106,8 @@ def handle_client(conn):
                 else:
                     print(f"[INFO] File not found on peers, fetching from central server...")
                     response = http_get(file)
+        
+        conn.settimeout(30)
 
         try:
             conn.sendall(response)
