@@ -7,22 +7,22 @@ import threading
 
 import time
 
-# SURROGATE 1
+# SURROGATE 2
 # Anycast address: communication with the client
 HOST = "192.168.1.100"
 PORT = 3030
 
 # Second interface: communication with peers and central server
-HOST_TO_CENTRAL = "192.168.5.100" 
+HOST_TO_CENTRAL = "192.168.6.100"
 
 # CENTRAL SERVER
-CENTRAL_HOST = "192.168.4.100"
+CENTRAL_HOST = "192.168.4.100" 
 CENTRAL_PORT = 3000 
 
 # SURROGATE PEERS
 # List of surrogates in the same AS
 SURROGATE_PEERS = [
-    ("192.168.6.100", 3030)
+   ("192.168.5.100", 3030)
 ]
 
 """ # for local testing
