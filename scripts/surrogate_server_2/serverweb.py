@@ -39,7 +39,7 @@ HOST_TO_CENTRAL = "127.0.0.1" """
 # 2) PEER REQUEST: interface 2
 # If in cache, send the file.
 # If not, send a 404 response.
-def handle_client(conn):
+def handle_client(conn, client_connexion_allowed):
     try:
         print(f"######### [INFO] Time : {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} #########")
         conn.settimeout(3)  # Set a timeout of 3 seconds
@@ -85,30 +85,39 @@ def handle_client(conn):
         # If the request comes from a client
         # In this case, the surrogate receives the request on its anycast address: 192.168.1.100
         else:
-            # 1) Check if the file is in the cache
-            if cache_manager.is_in_cache(file):
-                print(f"[INFO] Cache hit for {file}")
-                response = cache_manager.get(file)
+            # Check if the interface we launched the server with should allow connexion from clients
+            # client_connexion_allowed is only True when the server is launched on the anycast interface
+            if client_connexion_allowed:
+                # 1) Check if the file is in the cache
+                if cache_manager.is_in_cache(file):
+                    print(f"[INFO] Cache hit for {file}")
+                    response = cache_manager.get(file)
 
-            # 2) If not in the cache, ask peers for file
-            else:
-                print(f"[INFO] Cache miss for {file}, asking peers...")
-                response = ask_peers_for_file(file)
-
-                if response:
-                    print(f"[INFO] Got {file} from peer")
-                    # Store the file in the local cache
-                    header, body = response.split(b"\r\n\r\n", 1)
-                    cache_manager.add(file, header.decode("utf-8", errors="ignore"), body)
-                                
-                # 3) If no peer has the file, ask the central server
+                # 2) If not in the cache, ask peers for file
                 else:
-                    print(f"[INFO] File not found on peers, fetching from central server...")
-                    response = http_get(file)
+                    print(f"[INFO] Cache miss for {file}, asking peers...")
+                    response = ask_peers_for_file(file)
 
+                    if response:
+                        print(f"[INFO] Got {file} from peer")
+                        # Store the file in the local cache
+                        header, body = response.split(b"\r\n\r\n", 1)
+                        cache_manager.add(file, header.decode("utf-8", errors="ignore"), body)
+                                    
+                    # 3) If no peer has the file, ask the central server
+                    else:
+                        print(f"[INFO] File not found on peers, fetching from central server...")
+                        response = http_get(file)
+            else:
+                response = (
+                    b"HTTP/1.1 403 Forbidden\r\n"
+                    b"Content-Type: text/plain\r\n\r\n"
+                    b"Client connections are only allowed on the anycast interface."
+                )
+                print("[INFO] Client trying to connect to the second interface.")
+        
         # To fix our timeout error when sending a response
         conn.settimeout(30)
-        
         try:
             conn.sendall(response)
         except BrokenPipeError:
@@ -224,7 +233,7 @@ def http_get(filename):
 # Run the two servers on two threads:
 # 1) Server on the anycast address: 192.168.1.100 to communicate with the client
 # 2) Server on the second interface to receive requests from peers
-def run_server(host):
+def run_server(host, client_connexion_allowed):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind((host, PORT))
@@ -233,14 +242,14 @@ def run_server(host):
         while True:
             conn, addr = s.accept()
             print(f"\n######### Connected on {host} from {addr} #########")
-            handle_client(conn)
+            handle_client(conn, client_connexion_allowed)
 
 if __name__ == "__main__":
     # 1) Interface for the clients
-    t1 = threading.Thread(target=run_server, args=(HOST,))
+    t1 = threading.Thread(target=run_server, args=(HOST, True))
 
     # 2) Interface to listen to peer requests
-    t2 = threading.Thread(target=run_server, args=(HOST_TO_CENTRAL,))
+    t2 = threading.Thread(target=run_server, args=(HOST_TO_CENTRAL, False))
 
     t1.start()
     t2.start()
