@@ -1,3 +1,5 @@
 *.DS_Store
 *.backup
+scripts/surrogate_server/cache/*.*
+scripts/surrogate_server_2/cache/*.*
 __pycache__
