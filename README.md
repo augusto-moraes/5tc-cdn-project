@@ -31,12 +31,14 @@ When files are not stored locally
 
 ## Phase 3 :  Pluto
 When files are not stored locally
-- Apply a strategy to know where to get the file
-- Obtain the file
+- Apply a strategy to know where to get the file: we use applicative broadcast ✅
+- Obtain the file ✅
 
 ## Phase 4: Huey, Dewey, Louie
 A web server
 - Obtain your files using an IP interface different than
-the one over which you receive your eyeball queries
+the one over which you receive your eyeball queries ✅
 - (Necessary for a proper anycast based CDN)
+
+<img width="1359" height="489" alt="Final_archi" src="snapshots/final_archi.png" />
 
